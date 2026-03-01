@@ -39,30 +39,46 @@ module Pronto
 
       private
 
+      ANSI_RE = /\e\[[0-9;]*m/
+      SCORE_W = 5   # " 0.00"
+      TAGS_W  = 12
+      PRI_W   = 4   # "[#A]"
+      NUM_W   = 2
+      # fixed overhead: "  " + num + "  " + pri + " " + " " + tags + " " + score = 2+2+2+4+1+1+12+1+5 = 30
+      FIXED_W = 2 + NUM_W + 2 + PRI_W + 1 + 1 + TAGS_W + 1 + SCORE_W
+
       def build_content(tasks, _focus_index)
         inner_w = @layout.width - 4
         show_scores = @config.ui.show_scores?
         inner_h = @layout.queue_rows - 2
+        title_w = [inner_w - FIXED_W, 4].max
 
         if tasks.empty?
-          lines = ["  (queue empty)"]
-          lines << "" while lines.length < inner_h
+          lines = [ansi_ljust("  (queue empty)", inner_w)]
+          lines << " " * inner_w while lines.length < inner_h
           return lines.join("\n")
         end
 
         lines = tasks.each_with_index.map do |t, i|
-          num      = PASTEL.dim("#{i + 1}")
-          pri      = t.priority_label ? PASTEL.yellow(t.priority_label) : "    "
-          title    = truncate(t.title, inner_w - 30)
-          tags     = t.tags_label ? PASTEL.cyan(t.tags_label) : ""
-          score    = show_scores ? PASTEL.dim(format("%.2f", t.score)) : ""
+          num        = PASTEL.dim(format("%#{NUM_W}d", i + 1))
+          pri        = t.priority_label ? PASTEL.yellow(t.priority_label.ljust(PRI_W)) : " " * PRI_W
+          title      = truncate(t.title, title_w).ljust(title_w)
+          tags_plain = truncate(t.tags_label || "", TAGS_W)
+          tags       = tags_plain.empty? ? " " * TAGS_W : PASTEL.cyan(tags_plain) + " " * (TAGS_W - tags_plain.length)
+          score      = show_scores ? PASTEL.dim(format("%#{SCORE_W}.2f", t.score)) : " " * SCORE_W
 
-          "  #{num}  #{pri} #{title.ljust(inner_w - 28)} #{tags.ljust(12)} #{score}"
+          ansi_ljust("  #{num}  #{pri} #{title} #{tags} #{score}", inner_w)
         end
 
         # Pad to fill the panel
-        lines << "" while lines.length < inner_h
+        lines << " " * inner_w while lines.length < inner_h
         lines.first(inner_h).join("\n")
+      end
+
+      def ansi_ljust(str, width)
+        visible = str.gsub(ANSI_RE, "").length
+        padding = [width - visible, 0].max
+        str + " " * padding
       end
 
       def truncate(str, max)
