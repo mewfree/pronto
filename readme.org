@@ -1,0 +1,145 @@
+#+title: pronto — CLI Task Manager
+
+* Overview
+
+*pronto* is a CLI task manager that tells you what to focus on /right now/ —
+no decision fatigue. It reads and writes real =.org= files, so your tasks live
+alongside your notes.
+
+* Installation
+
+#+begin_src bash
+git clone git@github.com:mewfree/pronto.git /path/to/pronto
+cd /path/to/pronto
+bundle install
+ln -sf /path/to/pronto/bin/pronto ~/bin/pronto   # or add to $PATH
+#+end_src
+
+* Configuration
+
+Create =~/.config/pronto/config.yml=:
+
+#+begin_src yaml
+files:
+  - ~/org/inbox.org
+  - ~/org/work.org
+
+default_file: ~/org/inbox.org
+
+todo_keywords:
+  active: [TODO, NEXT, WAITING]
+  done:   [DONE, CANCELLED]
+
+insert_closed_timestamp: true
+
+scoring:
+  weights:
+    deadline:  0.40
+    priority:  0.25
+    scheduled: 0.20
+    age:       0.10
+    effort:    0.05
+  skip_cooldown_minutes: 30
+  tag_rules:
+    - during_hours: "09:00-17:00"
+      boost_tags:    [work]
+      suppress_tags: [personal]
+    - during_hours: "17:00-22:00"
+      boost_tags:    [personal, home]
+      suppress_tags: [work]
+
+ui:
+  focus_panel_height_pct: 0.40
+  queue_max_items: 8
+  show_scores: true
+#+end_src
+
+* Usage
+
+** TUI (default)
+
+#+begin_src bash
+pronto          # opens interactive TUI
+pronto ui       # explicit
+#+end_src
+
+*** Keyboard shortcuts
+
+| Key       | Action                        |
+|-----------+-------------------------------|
+| =d=       | Mark current task DONE        |
+| =s=       | Skip (resurfaces after delay) |
+| =n= / =↓= | Next task in focus            |
+| =p= / =↑= | Previous task                 |
+| =a=       | Add new task                  |
+| =r=       | Reload all .org files         |
+| =q=       | Quit                          |
+
+** CLI subcommands
+
+#+begin_src bash
+pronto next                      # print top task
+pronto list                      # show ranked table
+pronto list --limit 5 --tag work # filter by tag
+pronto add "Buy coffee" -p B -t personal -s 2026-03-02
+pronto done "Buy coffee"         # fuzzy match + mark done
+#+end_src
+
+* Scoring algorithm
+
+Each active TODO is scored =0..1= using a weighted sum:
+
+| Factor      | Weight | Formula                                         |
+|-------------+--------+-------------------------------------------------|
+| =deadline=  | 40%    | Logistic curve — overdue=1.0, +7d≈0.1          |
+| =priority=  | 25%    | A→1.0, B→0.6, C→0.3, none→0.1                  |
+| =scheduled= | 20%    | Past/today→1.0, tomorrow→0.5, future→0.0        |
+| =age=       | 10%    | log-scale over 30 days (prevents starvation)    |
+| =effort=    | 5%     | ≤30m→1.0, ≤1h→0.7, ≤2h→0.4, longer→0.1        |
+
+Time-of-day tag rules apply boost/suppress multipliers on top.
+
+* Sample tasks
+
+See =sample/tasks.org= for a realistic set of test tasks.
+
+#+begin_src bash
+mkdir -p ~/.config/pronto
+cat > ~/.config/pronto/config.yml <<EOF
+files:
+  - /path/to/pronto/sample/tasks.org
+default_file: /path/to/pronto/sample/tasks.org
+EOF
+pronto next
+pronto list
+#+end_src
+
+* File structure
+
+#+begin_example
+pronto/
+├── bin/pronto              ← executable
+├── lib/
+│   ├── pronto.rb
+│   └── pronto/
+│       ├── version.rb
+│       ├── config.rb
+│       ├── org/
+│       │   ├── parser.rb
+│       │   ├── node.rb
+│       │   ├── timestamp.rb
+│       │   └── writer.rb
+│       ├── store.rb
+│       ├── task.rb
+│       ├── scorer.rb
+│       ├── cli.rb
+│       └── tui/
+│           ├── app.rb
+│           ├── layout.rb
+│           ├── focus_panel.rb
+│           ├── queue_panel.rb
+│           ├── status_bar.rb
+│           └── input.rb
+├── Gemfile
+└── sample/tasks.org
+#+end_example

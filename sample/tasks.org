@@ -1,0 +1,113 @@
+#+TITLE: Sample Pronto Tasks
+#+TODO: TODO NEXT WAITING | DONE CANCELLED
+
+* Work
+** TODO [#A] Write quarterly report
+   DEADLINE: <2026-03-05 Thu>
+   SCHEDULED: <2026-03-01 Sun>
+   :PROPERTIES:
+   :EFFORT:   2h
+   :CREATED:  [2026-02-15 Sun]
+   :END:
+   Must include Q4 financials and projections for Q1.
+
+** NEXT [#A] Review PR comments
+   SCHEDULED: <2026-03-01 Sun>
+   :PROPERTIES:
+   :EFFORT:   30m
+   :CREATED:  [2026-02-28 Sat]
+   :END:
+
+** TODO [#B] Update project README
+   :PROPERTIES:
+   :EFFORT:   45m
+   :CREATED:  [2026-02-20 Fri]
+   :END:
+   Document new CLI flags and config options.
+
+** TODO Deploy staging environment
+   DEADLINE: <2026-03-10 Tue>
+   :PROPERTIES:
+   :EFFORT:   1h30m
+   :CREATED:  [2026-02-25 Wed]
+   :END:
+
+** WAITING [#B] Client feedback on proposal
+   :PROPERTIES:
+   :CREATED:  [2026-02-18 Tue]
+   :END:
+   Waiting for response from Alice.
+
+** DONE [#A] Set up CI pipeline
+   CLOSED: [2026-02-27 Fri 14:30]
+   :PROPERTIES:
+   :EFFORT:   3h
+   :CREATED:  [2026-02-10 Mon]
+   :END:
+
+* Personal
+** TODO [#B] Call dentist                                       :health:
+   SCHEDULED: <2026-03-02 Mon>
+   :PROPERTIES:
+   :EFFORT:   15m
+   :CREATED:  [2026-02-20 Fri]
+   :END:
+
+** TODO [#C] Read "Deep Work"                                   :learning:
+   :PROPERTIES:
+   :EFFORT:   2h
+   :CREATED:  [2026-01-10 Sat]
+   :END:
+   Currently on chapter 3.
+
+** TODO Grocery shopping                                        :home:errands:
+   SCHEDULED: <2026-03-01 Sun>
+   :PROPERTIES:
+   :EFFORT:   45m
+   :CREATED:  [2026-02-28 Sat]
+   :END:
+   - Vegetables
+   - Coffee
+   - Olive oil
+
+** TODO [#A] Pay electricity bill                               :home:finance:
+   DEADLINE: <2026-03-03 Tue>
+   :PROPERTIES:
+   :EFFORT:   10m
+   :CREATED:  [2026-02-25 Wed]
+   :END:
+
+** DONE Renew gym membership                                    :health:
+   CLOSED: [2026-02-26 Thu 10:00]
+   :PROPERTIES:
+   :CREATED:  [2026-02-20 Fri]
+   :END:
+
+** TODO [#C] Organize home office                               :home:
+   :PROPERTIES:
+   :EFFORT:   3h
+   :CREATED:  [2026-01-05 Mon]
+   :END:
+
+* Projects
+** TODO [#B] Release pronto v0.1                                :dev:
+   DEADLINE: <2026-03-15 Sun>
+   :PROPERTIES:
+   :EFFORT:   4h
+   :CREATED:  [2026-02-28 Sat]
+   :END:
+   Package and publish initial release.
+
+** TODO Write unit tests for org parser                         :dev:
+   SCHEDULED: <2026-03-02 Mon>
+   :PROPERTIES:
+   :EFFORT:   2h
+   :CREATED:  [2026-03-01 Sun]
+   :END:
+
+** NEXT [#A] Fix deadline scoring edge case                     :dev:bugs:
+   :PROPERTIES:
+   :EFFORT:   30m
+   :CREATED:  [2026-03-01 Sun]
+   :END:
+   Overdue deadlines should cap at 1.0 not exceed it.
