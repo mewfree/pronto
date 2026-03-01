@@ -47,11 +47,14 @@ module Pronto
       # fixed overhead: "  " + num + "  " + pri + " " + " " + tags + " " + score = 2+2+2+4+1+1+12+1+5 = 30
       FIXED_W = 2 + NUM_W + 2 + PRI_W + 1 + 1 + TAGS_W + 1 + SCORE_W
 
-      def build_content(tasks, _focus_index)
+      def build_content(tasks, focus_index)
         inner_w = @layout.width - 4
         show_scores = @config.ui.show_scores?
         inner_h = @layout.queue_rows - 2
         title_w = [inner_w - FIXED_W, 4].max
+        # focus_index is the global index; queue starts at tasks[1], so
+        # the highlighted row in the queue is at queue index (focus_index - 1)
+        highlighted = focus_index - 1
 
         if tasks.empty?
           lines = [ansi_ljust("  (queue empty)", inner_w)]
@@ -60,9 +63,12 @@ module Pronto
         end
 
         lines = tasks.each_with_index.map do |t, i|
-          num        = PASTEL.dim(format("%#{NUM_W}d", i + 1))
-          pri        = t.priority_label ? PASTEL.yellow(t.priority_label.ljust(PRI_W)) : " " * PRI_W
-          title      = truncate(t.title, title_w).ljust(title_w)
+          num_str    = format("%#{NUM_W}d", i + 1)
+          num        = i == highlighted ? PASTEL.bold(num_str) : PASTEL.dim(num_str)
+          pri_str    = t.priority_label ? t.priority_label.ljust(PRI_W) : " " * PRI_W
+          pri        = i == highlighted ? PASTEL.bold(pri_str) : PASTEL.yellow(pri_str)
+          title_str  = truncate(t.title, title_w).ljust(title_w)
+          title      = i == highlighted ? PASTEL.bold(title_str) : title_str
           tags_plain = truncate(t.tags_label || "", TAGS_W)
           tags       = tags_plain.empty? ? " " * TAGS_W : PASTEL.cyan(tags_plain) + " " * (TAGS_W - tags_plain.length)
           score      = show_scores ? PASTEL.dim(format("%#{SCORE_W}.2f", t.score)) : " " * SCORE_W

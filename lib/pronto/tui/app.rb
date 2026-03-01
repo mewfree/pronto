@@ -98,7 +98,7 @@ module Pronto
 
       def render
         invalidate_panels!
-        print @cursor.clear_screen
+        print @cursor.move_to(0, 0)
         focus_panel.render(current_task)
         queue_panel.render(tasks, focus_index: @focus_index)
         status_bar.render(@store)
