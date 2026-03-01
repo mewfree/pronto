@@ -19,8 +19,6 @@ module Pronto
       def render(tasks, focus_index: 0)
         # tasks is the full visible list; we show items after index 0
         queue_tasks = tasks[1..] || []
-        max         = @config.ui.queue_max_items
-        queue_tasks = queue_tasks.first(max)
 
         content = build_content(queue_tasks, focus_index)
 

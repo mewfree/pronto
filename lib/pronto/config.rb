@@ -28,7 +28,6 @@ module Pronto
       },
       "ui" => {
         "focus_panel_height_pct" => 0.40,
-        "queue_max_items"        => 8,
         "show_scores"            => true,
       },
     }.freeze
@@ -123,10 +122,6 @@ module Pronto
 
       def focus_panel_height_pct
         @raw.fetch("focus_panel_height_pct", 0.40)
-      end
-
-      def queue_max_items
-        @raw.fetch("queue_max_items", 8)
       end
 
       def show_scores?
