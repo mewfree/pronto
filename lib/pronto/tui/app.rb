@@ -13,11 +13,14 @@ module Pronto
   module TUI
     # Main TUI event loop. Manages terminal setup/teardown and dispatches key events.
     class App
+      SCROLL_MARGIN = 2
+
       def initialize(store, config)
         @store        = store
         @config       = config
         @cursor       = TTY::Cursor
         @focus_index  = 0
+        @queue_scroll = 0
         @running      = false
       end
 
@@ -100,7 +103,7 @@ module Pronto
         invalidate_panels!
         print @cursor.move_to(0, 0)
         focus_panel.render(current_task)
-        queue_panel.render(tasks, focus_index: @focus_index)
+        queue_panel.render(tasks, focus_index: @focus_index, scroll: @queue_scroll)
         status_bar.render(@store)
         $stdout.flush
       end
@@ -142,7 +145,8 @@ module Pronto
 
         # Reload and reset focus
         @store.reload!
-        @focus_index = 0
+        @focus_index  = 0
+        @queue_scroll = 0
         render
       end
 
@@ -151,8 +155,9 @@ module Pronto
         return unless task
 
         @store.skip!(task)
-        @focus_index = [@focus_index, tasks.size - 1].min
-        @focus_index = 0 if @focus_index < 0
+        @focus_index  = [@focus_index, tasks.size - 1].min
+        @focus_index  = 0 if @focus_index < 0
+        @queue_scroll = 0
         render
       end
 
@@ -183,7 +188,8 @@ module Pronto
               properties: props,
             )
             @store.reload!
-            @focus_index = 0
+            @focus_index  = 0
+            @queue_scroll = 0
           rescue => e
             print "\nError: #{e.message}\n"
             sleep 1.5
@@ -197,14 +203,38 @@ module Pronto
 
       def handle_refresh
         @store.reload!
-        @focus_index = 0
+        @focus_index  = 0
+        @queue_scroll = 0
         render
       end
 
       def advance_focus(delta)
         max = [tasks.size - 1, 0].max
         @focus_index = (@focus_index + delta).clamp(0, max)
+        update_queue_scroll(delta)
         render
+      end
+
+      def update_queue_scroll(delta)
+        highlighted = @focus_index - 1
+        inner_h     = layout.queue_rows - 2
+        queue_max   = [tasks.size - 2, 0].max  # max scroll offset
+
+        if highlighted < 0
+          @queue_scroll = 0
+        elsif delta > 0
+          # Scrolling down: trigger scroll when cursor is within margin of the bottom
+          bottom_threshold = @queue_scroll + inner_h - 1 - SCROLL_MARGIN
+          if highlighted > bottom_threshold
+            @queue_scroll = [highlighted - inner_h + 1 + SCROLL_MARGIN, queue_max].min
+          end
+        else
+          # Scrolling up: trigger scroll when cursor is within margin of the top
+          top_threshold = @queue_scroll + SCROLL_MARGIN
+          if highlighted < top_threshold
+            @queue_scroll = [highlighted - SCROLL_MARGIN, 0].max
+          end
+        end
       end
 
       def show_error(msg)

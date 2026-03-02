@@ -16,11 +16,11 @@ module Pronto
         @cursor = TTY::Cursor
       end
 
-      def render(tasks, focus_index: 0)
+      def render(tasks, focus_index: 0, scroll: 0)
         # tasks is the full visible list; we show items after index 0
         queue_tasks = tasks[1..] || []
 
-        content = build_content(queue_tasks, focus_index)
+        content = build_content(queue_tasks, focus_index, scroll)
 
         box = TTY::Box.frame(
           top:    @layout.queue_top - 1,
@@ -45,7 +45,7 @@ module Pronto
       # fixed overhead: "  " + num + "  " + pri + " " + " " + tags + " " + score = 2+2+2+4+1+1+12+1+5 = 30
       FIXED_W = 2 + NUM_W + 2 + PRI_W + 1 + 1 + TAGS_W + 1 + SCORE_W
 
-      def build_content(tasks, focus_index)
+      def build_content(tasks, focus_index, scroll)
         inner_w = @layout.width - 4
         show_scores = @config.ui.show_scores?
         inner_h = @layout.queue_rows - 2
@@ -60,13 +60,16 @@ module Pronto
           return lines.join("\n")
         end
 
-        lines = tasks.each_with_index.map do |t, i|
-          num_str    = format("%#{NUM_W}d", i + 1)
-          num        = i == highlighted ? PASTEL.bold(num_str) : PASTEL.dim(num_str)
+        visible = tasks[scroll, inner_h] || []
+
+        lines = visible.each_with_index.map do |t, i|
+          qi         = i + scroll  # index in full queue_tasks
+          num_str    = format("%#{NUM_W}d", qi + 1)
+          num        = qi == highlighted ? PASTEL.bold(num_str) : PASTEL.dim(num_str)
           pri_str    = t.priority_label ? t.priority_label.ljust(PRI_W) : " " * PRI_W
-          pri        = i == highlighted ? PASTEL.bold(pri_str) : PASTEL.yellow(pri_str)
+          pri        = qi == highlighted ? PASTEL.bold(pri_str) : PASTEL.yellow(pri_str)
           title_str  = truncate(t.title, title_w).ljust(title_w)
-          title      = i == highlighted ? PASTEL.bold(title_str) : title_str
+          title      = qi == highlighted ? PASTEL.bold(title_str) : title_str
           tags_plain = truncate(t.tags_label || "", TAGS_W)
           tags       = tags_plain.empty? ? " " * TAGS_W : PASTEL.cyan(tags_plain) + " " * (TAGS_W - tags_plain.length)
           score      = show_scores ? PASTEL.dim(format("%#{SCORE_W}.2f", t.score)) : " " * SCORE_W
@@ -76,7 +79,7 @@ module Pronto
 
         # Pad to fill the panel
         lines << " " * inner_w while lines.length < inner_h
-        lines.first(inner_h).join("\n")
+        lines.join("\n")
       end
 
       def ansi_ljust(str, width)
